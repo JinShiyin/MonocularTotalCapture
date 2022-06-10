@@ -9,9 +9,39 @@ RUN ln -s /usr/local/cuda-9.0/lib64/libcudart.so /usr/lib/libcudart.so
 ENV CUDA_ARCH_BIN "50 52 60 61"
 ENV CUDA_ARCH_PTX "50 52 60 61"
 
+# set proxy
+# RUN echo 'export proxy=http://114.212.82.121:8085'>>~/.bashrc && \
+#     echo 'export http_proxy=$proxy'>>~/.bashrc && \
+#     echo 'export https_proxy=$proxy'>>~/.bashrc && \
+#     echo 'export ftp_proxy=$proxy'>>~/.bashrce
+RUN export proxy=http://114.212.82.121:8085
+RUN export http_proxy=${proxy}
+RUN export https_proxy=${proxy}
+RUN export ftp_proxy=${proxy}
+
+# ENV proxy=socks5://114.212.82.121:10808
+# ENV http_proxy=${proxy}
+# ENV https_proxy=${proxy}
+# ENV ftp_proxy=${proxy}
+
+RUN rm -rf /etc/apt/sources.list && touch /etc/apt/sources.list && \
+    echo deb https://mirrors.ustc.edu.cn/ubuntu/ focal main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb-src https://mirrors.ustc.edu.cn/ubuntu/ focal main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb https://mirrors.ustc.edu.cn/ubuntu/ focal-updates main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb-src https://mirrors.ustc.edu.cn/ubuntu/ focal-updates main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb https://mirrors.ustc.edu.cn/ubuntu/ focal-backports main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb-src https://mirrors.ustc.edu.cn/ubuntu/ focal-backports main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb https://mirrors.ustc.edu.cn/ubuntu/ focal-security main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb-src https://mirrors.ustc.edu.cn/ubuntu/ focal-security main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb https://mirrors.ustc.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse >> /etc/apt/sources.list && \
+    echo deb-src https://mirrors.ustc.edu.cn/ubuntu/ focal-proposed main restricted universe multiverse >> /etc/apt/sources.list && \
+    apt-get update
+
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
+    curl \
     git \
     wget \
     ffmpeg \
@@ -49,9 +79,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     protobuf-compiler \
     python-dev \
     python-numpy \
-    python-pip \
     python-setuptools \
-    python-scipy \
     python3-dev \
     python3-matplotlib \
     python3-numpy \
@@ -64,17 +92,38 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     rm -rf /var/lib/apt/lists/*
 RUN apt-get autoremove -y && apt-get autoclean -y
 
+RUN wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+RUN python2 get-pip.py
+
+# change pip channel
+# RUN mkdir ~/.pip && touch ~/.pip/pip.conf && \
+#     echo '[global]'>>~/.pip/pip.conf && \
+#     echo 'index-url = https://pypi.tuna.tsinghua.edu.cn/simple'>>~/.pip/pip.conf
+
 # PYTHON
-RUN pip3 install --upgrade pip
+# RUN pip3 install --upgrade pip
 RUN pip3 install --upgrade setuptools \
     wheel \
-    tensorflow-gpu==1.12.0 \
+    tensorflow-gpu==2.2.0 \
     opencv-python \
     scikit-image \
     Mako \
     matplotlib \
     numpy \
     protobuf
+
+RUN pip install scipy
+
+
+# ENV proxy=http://114.212.82.121:10808
+# ENV http_proxy=${proxy}
+# ENV https_proxy=${proxy}
+# ENV ftp_proxy=${proxy}
+
+ENV proxy=socks5://114.212.82.121:10808
+ENV http_proxy=${proxy}
+ENV https_proxy=${proxy}
+ENV ftp_proxy=${proxy}
 
 # LIBIGL
 ENV LIBIGL_ROOT=/opt/libigl
@@ -173,6 +222,16 @@ RUN cd FitAdam && mkdir build && cd build && \
     cmake -D CUDA_USE_STATIC_CUDA_RUNTIME=OFF \
     -D OpenCV_DIR=/opt/opencv/build .. && \
     make all -j8
+
+ENV proxy=http://114.212.82.121:10808
+ENV http_proxy=${proxy}
+ENV https_proxy=${proxy}
+ENV ftp_proxy=${proxy}
+
+# ENV proxy=socks5://114.212.82.121:10808
+# ENV http_proxy=${proxy}
+# ENV https_proxy=${proxy}
+# ENV ftp_proxy=${proxy}
 
 # Python Fixes
 RUN pip3 install --upgrade --ignore-installed python-dateutil
